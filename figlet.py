@@ -42,8 +42,10 @@ class FigletSelectFontCommand(sublime_plugin.WindowCommand):
 
     def on_done(self, index):
         settings = sublime.load_settings("Preferences.sublime-settings")
-        settings.set("figlet_font", self.fonts[index])
-        sublime.save_settings("Preferences.sublime-settings")
+        if index != -1:
+            # -1 means they closed without picking anything.
+            settings.set("figlet_font", self.fonts[index])
+            sublime.save_settings("Preferences.sublime-settings")
 
 
 class FigletTextCommand(sublime_plugin.WindowCommand):
