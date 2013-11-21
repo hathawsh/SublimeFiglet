@@ -76,8 +76,9 @@ class FigletTextCommand(sublime_plugin.WindowCommand):
             sel.add(prefix_region)
         if init_text:
             self.on_change(init_text)
-        self.window.show_input_panel("Text to Figletize:", init_text,
-                                     None, self.on_change, self.on_cancel)
+        else:
+            self.window.show_input_panel("Text to Figletize:", '',
+                                         None, self.on_change, self.on_cancel)
 
     def figletize(self, text):
         return figlet_text(text)
