@@ -1,12 +1,20 @@
 # coding=utf-8
+import os
 import sublime
 import sublime_plugin
+import sys
 
+
+here = os.path.dirname(os.path.abspath(__file__))
+
+try:
+    import pyfiglet
+except ImportError:
+    sys.path.append(here)
+    import pyfiglet
 
 
 def figlet_text(text):
-    import pyfiglet
-
     settings = sublime.load_settings("Preferences.sublime-settings")
     font = settings.get('figlet_font', 'standard')
 
@@ -36,7 +44,6 @@ def get_width():
 
 class FigletSelectFontCommand(sublime_plugin.WindowCommand):
     def run(self):
-        import pyfiglet
         self.fonts = pyfiglet.FigletFont.getFonts()
         self.window.show_quick_panel(self.fonts, self.on_done)
 
