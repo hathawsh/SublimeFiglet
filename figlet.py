@@ -25,6 +25,7 @@ def figlet_text(text):
     # Strip trailing whitespace, because why not?
     if settings.get('figlet_no_trailing_spaces', True):
         result = '\n'.join((line.rstrip() for line in result.split('\n')))
+        result = result.rstrip()
 
     return result
 
@@ -84,7 +85,7 @@ class FigletTextCommand(sublime_plugin.WindowCommand):
         return figlet_text(text)
 
     def on_change(self, text):
-        big_text = self.figletize(text).strip()
+        big_text = self.figletize(text)
         if self.prefix:
             big_text = self.prefix + big_text.replace('\n', '\n' + self.prefix)
 
@@ -136,7 +137,7 @@ class FigletTextCommand(sublime_plugin.WindowCommand):
 
 class FigletTripleQuoteCommand(FigletTextCommand):
     def figletize(self, text):
-        return "'''\n%s\n'''" % figlet_text(text).strip()
+        return "'''\n%s\n'''" % figlet_text(text)
 
 
 class FigletCommentCommand(sublime_plugin.WindowCommand):
