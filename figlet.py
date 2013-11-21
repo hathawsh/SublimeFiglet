@@ -56,45 +56,89 @@ class FigletSelectFontCommand(sublime_plugin.WindowCommand):
 
 
 class FigletTextCommand(sublime_plugin.WindowCommand):
+    changed_region = None
+    prefix = ''
+    init_text = ''
+
     def run(self):
+        self.changed_region = None
         view = self.window.active_view()
-        if len(view.sel()) == 1 and view.sel()[0].size() > 0:
-            s = view.sel()[0]
-            text = view.substr(s)
+        sel = view.sel()
+        init_text = '\n'.join(view.substr(region) for region in sel)
+        self.init_text = init_text
+        r = sel[0]
+        cursor = min(r.a, r.b)
+        line = view.line(cursor)
+        prefix_region = sublime.Region(min(line.a, line.b), cursor)
+        prefix = view.substr(prefix_region)
+        self.prefix = prefix
+        if prefix:
+            sel.add(prefix_region)
+        if init_text:
+            self.on_change(init_text)
+        self.window.show_input_panel("Text to Figletize:", init_text,
+                                     None, self.on_change, self.on_cancel)
 
-            edit = view.begin_edit()
-            view.erase(edit, s)
-            self.on_done(text, edit)
+    def figletize(self, text):
+        return figlet_text(text)
+
+    def on_change(self, text):
+        big_text = self.figletize(text).strip()
+        if self.prefix:
+            big_text = self.prefix + big_text.replace('\n', '\n' + self.prefix)
+
+        view = self.window.active_view()
+        edit = view.begin_edit()
+
+        if self.changed_region is not None:
+            view.erase(edit, self.changed_region)
+            cursor = self.changed_region.a
         else:
-            self.window.show_input_panel("Text to Figletize:", "",
-                                         self.on_done, None, None)
-        pass
+            r = view.sel()[0]
+            cursor = min(r.a, r.b)
+            for r in reversed(view.sel()):
+                view.erase(edit, r)
 
-    def on_done(self, text, edit=None):
-        if text == "":
-            return
-
-        text = figlet_text(text)
-
-        # Put into view.
-        view = self.window.active_view()
-
-        if edit is None:
-            edit = view.begin_edit()
-
-        self.window.run_command('single_selection')
-
-        cursor = view.sel()[0].a
-        text = text[:len(text) - 1]
-        view.insert(edit, cursor, text)
+        view.insert(edit, cursor, big_text)
 
         # Select
-        view.sel().add(sublime.Region(cursor, cursor + len(text)))
+        region = sublime.Region(cursor, cursor + len(big_text))
+        self.changed_region = region
+        sel = view.sel()
+        sel.clear()
+        sel.add(region)
 
         view.end_edit(edit)
 
+    def on_cancel(self):
+        if self.changed_region is not None:
+            view = self.window.active_view()
+            edit = view.begin_edit()
+            view.erase(edit, self.changed_region)
+            point = self.changed_region.a
+            plen = len(self.prefix)
+            cursor = point + plen
+            sel = view.sel()
+            sel.clear()
+            if self.prefix or self.init_text:
+                view.insert(edit, point, self.prefix + self.init_text)
+                if self.init_text:
+                    region = sublime.Region(
+                        cursor, cursor + len(self.init_text))
+                    sel.add(region)
+            sel.add(sublime.Region(cursor, cursor))
+            view.end_edit(edit)
+        self.changed_region = None
+        self.init_text = ''
+        self.prefix = ''
 
-class FigletCommentCommand(sublime_plugin.WindowCommand):
+
+class FigletTripleQuoteCommand(FigletTextCommand):
+    def figletize(self, text):
+        return "'''\n%s\n'''" % figlet_text(text).strip()
+
+
+class FigletCommentCommand(FigletTextCommand):
     def run(self):
         view = self.window.active_view()
         if len(view.sel()) == 1 and view.sel()[0].size() > 0:

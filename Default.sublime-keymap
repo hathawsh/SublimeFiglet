@@ -1,0 +1,5 @@
+[
+    { "keys": ["ctrl+super+alt+b"], "command": "figlet_text"},
+    { "keys": ["ctrl+super+alt+c"], "command": "figlet_comment"},
+    { "keys": ["ctrl+super+alt+q"], "command": "figlet_triple_quote"}
+]
