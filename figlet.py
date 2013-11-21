@@ -138,7 +138,7 @@ class FigletTripleQuoteCommand(FigletTextCommand):
         return "'''\n%s\n'''" % figlet_text(text).strip()
 
 
-class FigletCommentCommand(FigletTextCommand):
+class FigletCommentCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
         if len(view.sel()) == 1 and view.sel()[0].size() > 0:
